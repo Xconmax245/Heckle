@@ -6,7 +6,6 @@ import { Mic, MessageSquare, Rocket, Flame, ArrowRight, ShieldAlert, Newspaper, 
 import { bind } from "cuelume";
 
 export default function LandingPage() {
-  const [terminalStep, setTerminalStep] = useState(0);
 
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).AOS) {
@@ -20,23 +19,6 @@ export default function LandingPage() {
       }, 100);
     }
   }, []);
-
-  useEffect(() => {
-    bind();
-    const timer = setInterval(() => {
-      setTerminalStep(prev => (prev < 6 ? prev + 1 : 0));
-    }, 1500);
-    return () => clearInterval(timer);
-  }, []);
-
-  const terminalLines = [
-    "Uploading pitch...",
-    "Comparing against competitors...",
-    "Checking first sentence...",
-    "Looking for proof...",
-    "Generating criticism...",
-    "Verdict ready."
-  ];
 
   return (
     <main className="min-h-screen flex flex-col items-center w-full overflow-hidden bg-[var(--bg)]">
@@ -420,55 +402,6 @@ export default function LandingPage() {
             <div className="bg-white border border-[var(--accent-soft)] p-4 rounded-xl shadow-sm text-sm">
               <span className="font-bold text-[var(--accent)] block mb-1">Heckle</span>
               Powerful.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* -----------------------------
-          SECTION 9 & 11: Fake Terminal + Stats
-      ------------------------------ */}
-      <section className="w-full max-w-[1000px] px-6 py-24 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        {/* Fake Terminal */}
-        <div className="bg-[#0c0c0c] rounded-lg p-6 font-mono text-sm text-green-400 shadow-2xl h-[300px] flex flex-col" data-aos="fade-up">
-          <div className="flex gap-2 mb-4 border-b border-white/10 pb-4">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          </div>
-          <div className="flex flex-col gap-2 flex-grow">
-            <div><span className="text-white">$</span> heckle --analyze pitch.txt</div>
-            {terminalLines.map((line, idx) => (
-              <div key={idx} className={idx <= terminalStep ? "block" : "hidden"}>
-                {idx === 5 ? <span className="text-white bg-green-600 px-1">{line}</span> : line}
-              </div>
-            ))}
-            {terminalStep < 6 && <div className="w-2 h-4 bg-green-400 animate-pulse mt-1"></div>}
-          </div>
-        </div>
-
-        {/* Time-to-Criticism Stats */}
-        <div className="flex flex-col gap-6" data-aos="fade-left">
-          <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-4">
-            How long until someone says...
-          </h2>
-          
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center border-b border-[var(--line)] pb-3">
-              <span className="font-serif italic text-[var(--muted)]">"Already exists"</span>
-              <span className="font-display text-2xl text-[var(--ink)]">3.2 sec</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-[var(--line)] pb-3">
-              <span className="font-serif italic text-[var(--muted)]">"What's different?"</span>
-              <span className="font-display text-2xl text-[var(--ink)]">5.8 sec</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-[var(--line)] pb-3">
-              <span className="font-serif italic text-[var(--muted)]">"I stopped reading"</span>
-              <span className="font-display text-2xl text-red-600">1.7 sec</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-[var(--line)] pb-3">
-              <span className="font-serif italic text-[var(--muted)]">"Interesting"</span>
-              <span className="font-display text-2xl text-[var(--accent)]">12.1 sec</span>
             </div>
           </div>
         </div>
