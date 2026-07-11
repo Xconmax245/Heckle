@@ -1,4 +1,4 @@
-# 📱 Heckle: Mobile App Launch Simulator
+# Heckle: Mobile App Launch Simulator
 
 > **Simulate your entire mobile app launch before it goes live.**
 
@@ -8,7 +8,7 @@ Whether you're writing an App Store description, a launch tweet, a TikTok captio
 
 ---
 
-## ✨ Why Heckle?
+## Why Heckle?
 
 Founders spend weeks building mobile apps.
 
@@ -23,9 +23,9 @@ Most founders only discover these problems **after** they launch. Heckle changes
 
 ---
 
-# 🚀 Features
+# Features
 
-## 🎭 AI Persona Gauntlet
+## AI Persona Gauntlet
 
 Your launch asset is reviewed by up to 6 independent AI personas, each evaluating it through a completely different lens.
 
@@ -53,7 +53,7 @@ Every reviewer responds independently. No shared prompt. No canned responses.
 
 ---
 
-## 📊 Launch Impact Scorecard
+## Launch Impact Scorecard
 
 After every review, Heckle performs a second AI pass that synthesizes the feedback and analyzes your launch as a whole.
 
@@ -70,7 +70,7 @@ alongside:
 
 ---
 
-## 🎯 Context-Aware Testing
+## Context-Aware Testing
 
 Heckle adapts to what you are testing and who you are targeting:
 - **Asset Types**: App Store Description, Product Hunt Launch, TikTok/Reels Caption, Press Release, Tweet Thread, Landing Page Headline, etc.
@@ -78,7 +78,7 @@ Heckle adapts to what you are testing and who you are targeting:
 
 ---
 
-# 🖼 Product Flow
+# Product Flow
 
 ```
 Paste Launch Asset
@@ -104,7 +104,7 @@ Promotion Coverage Map
 
 ---
 
-# 💻 Tech Stack
+# Tech Stack
 
 ### Frontend
 - Next.js 14 (App Router)
@@ -123,7 +123,7 @@ Promotion Coverage Map
 
 ---
 
-# ⚙️ How It Works
+# How It Works
 
 1. **Input**: Paste your app's launch copy, select the asset type (e.g., App Store Description), and pick your target audience.
 2. **Gauntlet**: Heckle sends the copy to multiple AI reviewers simultaneously. Each has a unique personality and evaluation rubric.
@@ -132,7 +132,7 @@ Promotion Coverage Map
 
 ---
 
-# 🎨 Design Philosophy
+# Design Philosophy
 
 Heckle deliberately avoids generic "AI app" aesthetics.
 
@@ -146,7 +146,7 @@ Core principles:
 
 ---
 
-# 🌍 Potential Use Cases
+# Potential Use Cases
 
 - App Store & Google Play descriptions
 - TikTok / Instagram Reels captions
@@ -158,7 +158,7 @@ Core principles:
 
 ---
 
-# 💰 Business Potential & Pricing
+# Business Potential & Pricing
 
 Heckle targets a massive, underserved market: indie hackers, early-stage founders, product managers writing internal pitches, and students entering startup competitions. Anyone who has spent 20 minutes crafting a Product Hunt launch only to get 3 upvotes is our target customer.
 
@@ -168,7 +168,7 @@ Heckle targets a massive, underserved market: indie hackers, early-stage founder
 
 ---
 
-# 🤝 Contributing
+# Contributing
 
 Contributions are welcome! If you'd like to improve Heckle, feel free to:
 - Open an issue or submit a PR
@@ -178,7 +178,7 @@ Contributions are welcome! If you'd like to improve Heckle, feel free to:
 
 ---
 
-# 🏗 Local Development
+# Local Development
 
 Clone the repository:
 ```bash
@@ -206,8 +206,8 @@ Open `http://localhost:3000` to run the gauntlet.
 
 <div align="center">
 
-### 🎤 Better to get roasted in private than ignored in public.
+### Better to get roasted in private than ignored in public.
 
-**Built with ❤️ for HackOnVibe 2026**
+**Built for HackOnVibe 2026**
 
 </div>
