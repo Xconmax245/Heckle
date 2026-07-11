@@ -8,13 +8,20 @@ import { play, bind } from "cuelume";
 import { playPaperSlap } from "@/lib/audio";
 import LZString from "lz-string";
 
-const ICONS = {
+const ICONS: Record<string, any> = {
   ph_early_adopter: ShieldAlert,
   mobile_tech_journalist: Newspaper,
   social_media_scroller: Search,
   app_investor: Briefcase,
   app_store_browser: Search,
-  first_time_user: Zap
+  first_time_user: Zap,
+  developer: Target,
+  student: Target,
+  parent: Target,
+  designer: Target,
+  creator: Target,
+  founder: Target,
+  gamer: Target,
 };
 
 const ASSET_TYPES = [
@@ -42,7 +49,14 @@ const PERSONA_CUES: Record<string, any> = {
   social_media_scroller: 'sparkle',
   app_investor: 'droplet',
   app_store_browser: 'bloom',
-  first_time_user: 'success'
+  first_time_user: 'success',
+  developer: 'tick',
+  student: 'whisper',
+  parent: 'sparkle',
+  designer: 'droplet',
+  creator: 'bloom',
+  founder: 'success',
+  gamer: 'tick',
 };
 
 const AMBIENT_COPY = [
@@ -88,6 +102,9 @@ export default function GauntletPage() {
     personaResponses: { persona: string; response: string; wouldShare: string }[];
     report: any;
   } | null>(null);
+
+  const [promoKitLoading, setPromoKitLoading] = useState(false);
+  const [promoKit, setPromoKit] = useState<any>(null);
 
   // Mouse Spotlight and Cuelume Bind
   useEffect(() => {
@@ -289,14 +306,6 @@ export default function GauntletPage() {
     executeGauntlet(pitch);
   };
 
-  const handleRewriteAndRetry = () => {
-    if (!results) return;
-    play("toggle");
-    setPreviousScore(getOverallScore(results));
-    const suggestedPitch = results.report.rewrite.fullRewrite;
-    setPitch(suggestedPitch);
-    executeGauntlet(suggestedPitch);
-  };
 
   const reset = () => {
     setLoadingPhase("idle");
@@ -304,6 +313,61 @@ export default function GauntletPage() {
     setPitch("");
     setPreviousScore(null);
     setTimeline([]);
+    setPromoKit(null);
+  };
+
+  const handleRewriteAndRetry = () => {
+    if (!results?.report?.rewrite?.fullRewrite) return;
+    setPreviousScore(results.report.scores?.overall || getOverallScore({ report: results.report }));
+    setPitch(results.report.rewrite.fullRewrite);
+    runGauntlet();
+  };
+
+  const handleGeneratePromoKit = async () => {
+    if (!results?.report?.rewrite?.fullRewrite) return;
+    setPromoKitLoading(true);
+    try {
+      const res = await fetch("/api/promokit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pitch: results.report.rewrite.fullRewrite, assetType, audience })
+      });
+      if (!res.ok) throw new Error("Failed to generate promo kit");
+      const data = await res.json();
+      setPromoKit(data);
+      play("success");
+    } catch (e) {
+      alert("Failed to generate promo kit. Please try again.");
+    } finally {
+      setPromoKitLoading(false);
+    }
+  };
+
+  const handleDownloadReport = () => {
+    if (!results) return;
+    let md = `# Heckle Pitch Report\n\n## Asset Type: ${assetType}\n## Audience: ${audience}\n\n## Original Pitch\n${pitch}\n\n`;
+    md += `## Overall Verdict\n${results.report.verdict || ''}\n\n`;
+    md += `## Scores\n- Clarity: ${results.report.scores?.clarity}/100\n- Differentiation: ${results.report.scores?.differentiation}/100\n- Credibility: ${results.report.scores?.credibility}/100\n- Hook Strength: ${results.report.scores?.hookStrength}/100\n\n`;
+    md += `## Stakeholder Reactions\n\n`;
+    results.personaResponses.forEach(r => {
+      const p = PERSONAS[r.persona as keyof typeof PERSONAS];
+      md += `### ${p?.name || r.persona}\n"${r.response}"\n\n`;
+    });
+    md += `## Targeted Rewrite\n${results.report.rewrite?.fullRewrite || ''}\n`;
+    
+    if (promoKit) {
+      md += `\n## AI Promo Kit\n\n### App Store Description\n${promoKit.appStore}\n\n### Product Hunt Post\n${promoKit.productHunt}\n\n### X Thread\n${promoKit.twitterThread?.join('\n\n')}\n\n### Reddit Post\n${promoKit.redditPost}\n\n### Press Email\n${promoKit.pressEmail}\n\n### Short Caption\n${promoKit.shortCaption}\n`;
+    }
+
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "launch-report.md";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const trySamplePitch = () => {
@@ -425,10 +489,12 @@ export default function GauntletPage() {
 
               <div className="flex flex-col gap-3 mt-2">
                 <label className="text-[var(--muted)] text-sm font-semibold uppercase tracking-wider">
-                  Select Personas
+                  Review Panel
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {Object.entries(PERSONAS).map(([key, persona]) => (
+                
+                <div className="text-xs font-bold text-[var(--muted)] mt-2 border-b border-[var(--line)] pb-2">STAKEHOLDERS</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                  {Object.entries(PERSONAS).slice(0, 6).map(([key, persona]) => (
                     <label
                       key={key}
                       className={`flex items-start gap-3 p-4 rounded-2xl ${
@@ -440,7 +506,33 @@ export default function GauntletPage() {
                       <input
                         type="checkbox"
                         checked={selectedPersonas.includes(key)}
-                        onChange={() => { togglePersona(key); play(PERSONA_CUES[key]); }}
+                        onChange={() => { togglePersona(key); play(PERSONA_CUES[key] || 'tick'); }}
+                        className="mt-1 h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)] cursor-pointer"
+                        style={{ accentColor: "var(--accent)" }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-[var(--ink)] leading-tight">{persona.name}</span>
+                        <span className="text-[0.8rem] text-[var(--muted)] mt-0.5">{persona.label}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="text-xs font-bold text-[var(--muted)] mt-4 border-b border-[var(--line)] pb-2">TARGET DEMOGRAPHICS</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Object.entries(PERSONAS).slice(6).map(([key, persona]) => (
+                    <label
+                      key={key}
+                      className={`flex items-start gap-3 p-4 rounded-2xl ${
+                        selectedPersonas.includes(key)
+                          ? "bg-[var(--accent-soft)] shadow-sm"
+                          : "bg-white/50 hover:bg-white shadow-sm"
+                      } cursor-pointer transition-all duration-200`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedPersonas.includes(key)}
+                        onChange={() => { togglePersona(key); play(PERSONA_CUES[key] || 'tick'); }}
                         className="mt-1 h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)] cursor-pointer"
                         style={{ accentColor: "var(--accent)" }}
                       />
@@ -726,9 +818,16 @@ export default function GauntletPage() {
               </div>
             </div>
 
-            {/* --- PHASE 4: SCORECARD --- */}
+            {/* --- PHASE 3: IMPACT SCORECARD --- */}
             <div className="flex flex-col gap-6">
-              <h3 className="font-semibold text-sm uppercase tracking-widest text-[var(--muted)] border-l-2 border-[var(--line)] pl-3">Scorecard</h3>
+              <div className="flex justify-between items-end border-l-2 border-[var(--line)] pl-3">
+                <h3 className="font-semibold text-sm uppercase tracking-widest text-[var(--muted)]">Pitch Scorecard</h3>
+                {previousScore !== null && (
+                  <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                    <TrendingUp className="w-3 h-3" /> Score Increased: {previousScore} → {getOverallScore({ report: results.report })}
+                  </div>
+                )}
+              </div>
               
               <div className="flex flex-col gap-4">
                 {/* Hook Metric is special now */}
@@ -825,8 +924,42 @@ export default function GauntletPage() {
               </div>
             </div>
 
+            {/* --- CONTRADICTION DETECTOR --- */}
+            {results.report.contradictions && results.report.contradictions.length > 0 && (
+              <div className="flex flex-col gap-6 mt-4">
+                <h3 className="font-semibold text-sm uppercase tracking-widest text-amber-700 border-l-2 border-amber-300 pl-3">Contradiction Detector</h3>
+                <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm">
+                  {results.report.contradictions.map((c: any, i: number) => (
+                    <div key={i} className="mb-6 last:mb-0">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-600" />
+                        <span className="font-bold text-amber-800">Messaging Conflict Detected</span>
+                        <span className="ml-auto text-xs font-bold bg-amber-200 text-amber-800 px-2 py-1 rounded">
+                          {c.confidence}% Confidence
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div className="bg-white p-3 rounded border border-amber-200 shadow-sm text-sm italic text-[var(--ink)] relative">
+                          <span className="absolute -top-2 -left-2 bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">You say</span>
+                          "{c.claim1}"
+                        </div>
+                        <div className="bg-white p-3 rounded border border-amber-200 shadow-sm text-sm italic text-[var(--ink)] relative">
+                          <span className="absolute -top-2 -left-2 bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">But later</span>
+                          "{c.claim2}"
+                        </div>
+                      </div>
+                      <p className="text-sm text-amber-900 font-medium">
+                        <span className="font-bold mr-2">Why this hurts you:</span>
+                        {c.explanation}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* --- PHASE 6: REWRITE --- */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 mt-4">
               <h3 className="font-semibold text-sm uppercase tracking-widest text-[var(--muted)] border-l-2 border-[var(--line)] pl-3">Targeted Rewrite</h3>
               
               <div className="p-8 rounded-2xl bg-[var(--accent-soft)] border border-[var(--line)] shadow-sm relative">
@@ -868,6 +1001,72 @@ export default function GauntletPage() {
               </div>
             </div>
 
+            {/* --- PHASE 7: PROMO KIT --- */}
+            <div className="flex flex-col gap-6 mt-4 mb-16">
+              <h3 className="font-semibold text-sm uppercase tracking-widest text-[var(--muted)] border-l-2 border-[var(--line)] pl-3">AI Promo Kit</h3>
+              
+              {!promoKit ? (
+                <div className="p-8 rounded-2xl bg-[var(--bg)] border border-[var(--line)] shadow-sm flex flex-col items-center justify-center gap-4">
+                  <Target className="w-12 h-12 text-[var(--muted)] opacity-50 mb-2" />
+                  <p className="text-center text-[var(--ink)] font-medium">
+                    Generate a full suite of launch assets based on your newly improved pitch.
+                  </p>
+                  <button
+                    onClick={handleGeneratePromoKit}
+                    disabled={promoKitLoading}
+                    className="mt-4 rounded-full px-6 py-3 bg-[var(--ink)] text-white font-bold text-sm hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {promoKitLoading ? "Generating..." : "Unlock AI Promo Kit"}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  <div className="p-6 rounded-2xl bg-white border border-[var(--line)] shadow-sm">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">App Store / Landing Page</h4>
+                    <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">{promoKit.appStore}</p>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-white border border-[var(--line)] shadow-sm">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">Product Hunt Launch</h4>
+                    <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">{promoKit.productHunt}</p>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-white border border-[var(--line)] shadow-sm">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">X / Twitter Thread</h4>
+                    <div className="flex flex-col gap-3">
+                      {promoKit.twitterThread?.map((tweet: string, idx: number) => (
+                        <div key={idx} className="p-3 bg-[var(--bg)] rounded-lg text-sm">{idx + 1}/ {tweet}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="p-6 rounded-2xl bg-white border border-[var(--line)] shadow-sm">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">Short Caption</h4>
+                      <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">{promoKit.shortCaption}</p>
+                    </div>
+                    <div className="p-6 rounded-2xl bg-white border border-[var(--line)] shadow-sm">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">Press Email</h4>
+                      <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">{promoKit.pressEmail}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* --- EXPORT TOOLS --- */}
+            <div className="flex justify-center border-t border-[var(--line)] pt-8 w-full gap-4">
+              <button
+                onClick={handleShare}
+                className="flex items-center justify-center gap-2 rounded-full px-6 py-3 bg-white border border-[var(--line)] text-[var(--ink)] font-bold text-sm hover:border-[var(--muted)] transition-all shadow-sm"
+              >
+                Share Link
+              </button>
+              <button
+                onClick={handleDownloadReport}
+                className="flex items-center justify-center gap-2 rounded-full px-6 py-3 bg-white border border-[var(--line)] text-[var(--ink)] font-bold text-sm hover:border-[var(--muted)] transition-all shadow-sm"
+              >
+                Download Markdown
+              </button>
+            </div>
+            
           </div>
         )}
       </div>
